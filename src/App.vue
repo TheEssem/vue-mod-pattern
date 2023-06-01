@@ -25,19 +25,19 @@
       <div class="pattern-display">
         <div class="mod-pattern" ref="modPattern">
           <span
-            v-for="(row, j) in patData[currentPattern]"
+            v-for="(row, i) in patData[currentPattern]"
             ref="initRow"
-            v-bind:class="{ modRowActive: isRowActive(j) }"
+            v-bind:class="{ modRowActive: isRowActive(i) }"
           >
-            <span v-bind:class="{ modColQuarter: j % 4 === 0 }">{{
-              indexText(j)
+            <span v-bind:class="{ modColQuarter: i % 4 === 0 }">{{
+              indexText(i)
             }}</span>
-            <span class="mod-col" v-for="n in nbChannels"
-              >|{{ row.notes[n - 1]
-              }}<span class="mod-col-inst">{{ row.insts[n - 1] }}</span
-              ><span class="mod-col-vol">{{ row.vols[n - 1] }}</span
-              ><span class="mod-col-fx">{{ row.fxs[n - 1] }}</span
-              ><span class="mod-col-op">{{ row.ops[n - 1] }}</span>
+            <span class="mod-col" v-for="(note, index) in row.notes" :key="index"
+              >|{{ note
+              }}<span class="mod-col-inst">{{ row.insts[index] }}</span
+              ><span class="mod-col-vol">{{ row.vols[index ] }}</span
+              ><span class="mod-col-fx">{{ row.fxs[index] }}</span
+              ><span class="mod-col-op">{{ row.ops[index] }}</span>
             </span>
           </span>
         </div>
@@ -162,7 +162,7 @@ function stop(noDisplayUpdate = false) {
   if (!noDisplayUpdate) {
     try {
       player.value.play(buffer);
-      display(true);
+      display(0, true);
     } catch (e) {
       console.warn(e);
     }
@@ -232,7 +232,7 @@ function getRow(pattern: number, rowOffset: number) {
   };
 }
 
-function display(reset = false) {
+function display(_time = 0, reset = false) {
   if (!patternShow.value) return;
 
   if (reset) {

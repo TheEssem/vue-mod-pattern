@@ -1,1 +1,1 @@
-Module pattern viewer for Vue. Based on a patch for Foundkey.
+Module pattern viewer for Vue. Heavily modified from [a Foundkey patch by Puniko](https://akkoma.dev/puniko/FoundKey/src/branch/feature/mod-tracker) to make it standalone for testing and use standard Vue elements.
