@@ -1,3 +1,5 @@
+// modified from https://github.com/deskjet/chiptune2.js
+
 /* global libopenmpt UTF8ToString writeAsciiToMemory */
 
 window.libopenmpt = window.Module;

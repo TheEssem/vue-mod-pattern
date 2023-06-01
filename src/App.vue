@@ -69,7 +69,8 @@
         />
       </div>
     </div>
-    <p>Reload to choose another module.</p>
+    <br>
+    <button @click="stopModule()">Return to module selection</button>
   </div>
 </template>
 
@@ -120,6 +121,13 @@ function startModule(module: string) {
     .catch((error: any) => {
       console.error(error);
     });
+}
+
+function stopModule() {
+  stop();
+  patternShow.value = !patternShow.value;
+  loaded.value = false;
+  patData.value = [];
 }
 
 function playPause() {
