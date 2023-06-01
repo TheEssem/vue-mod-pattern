@@ -17,6 +17,7 @@
       Zanoma - Believe (30-channel IT, very laggy)
     </button>
     <p>This player is powered by chiptune2.js, libopenmpt, and Vue.</p>
+    <p>Source can be found at <a href="https://github.com/TheEssem/vue-mod-pattern">https://github.com/TheEssem/vue-mod-pattern</a>.</p>
   </div>
 
   <div v-else>
@@ -161,7 +162,7 @@ function stop(noDisplayUpdate = false) {
   if (!noDisplayUpdate) {
     try {
       player.value.play(buffer);
-      display();
+      display(true);
     } catch (e) {
       console.warn(e);
     }
@@ -231,8 +232,13 @@ function getRow(pattern: number, rowOffset: number) {
   };
 }
 
-function display() {
+function display(reset = false) {
   if (!patternShow.value) return;
+
+  if (reset) {
+    const pattern = player.value.getPattern();
+    currentPattern.value = pattern;
+  }
 
   if (patData.value.length === 0) {
     const nbPatterns = player.value.getNumPatterns();
@@ -349,6 +355,7 @@ onDeactivated(() => {
       border: none;
       background-color: transparent;
       cursor: pointer;
+      margin: auto;
 
       &:hover {
         background-color: #fff;
