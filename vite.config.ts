@@ -6,4 +6,8 @@ export default defineConfig({
   plugins: [vue({
     reactivityTransform: true,
   })],
+  optimizeDeps: {
+    exclude: ["libopenmpt-wasm"]
+  },
+  base: "/vue-mod-pattern/"
 })

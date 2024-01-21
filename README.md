@@ -1,1 +1,4 @@
-Module pattern viewer for Vue. Heavily modified from [a Foundkey patch by Puniko](https://akkoma.dev/puniko/FoundKey/src/branch/feature/mod-tracker) to make it standalone for testing and use standard Vue elements.
+# vue-mod-pattern
+Music tracker module pattern viewer for Vue.
+
+Heavily modified from [Foundkey's canvas-based implementation](https://akkoma.dev/FoundKeyGang/FoundKey/src/branch/main/packages/client/src/components/mod-player.vue), which I later used as the base for a rewritten, text-based implementation in [Firefish](https://git.joinfirefish.org/firefish/firefish/-/blob/develop/packages/client/src/components/MkModPlayer.vue). This is a standalone, modified version of the player used in Firefish, made for testing and portability.
