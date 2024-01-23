@@ -248,21 +248,25 @@ export class ChiptuneJsPlayer {
     });
   }
 
-  async play(buffer: ArrayBuffer) {
-    this.unlock();
+  async loadModule(buffer: ArrayBuffer) {
 	  this.stop();
 	  return this.createLibopenmptNode(buffer, this.config).then((processNode) => {
-		  if (processNode === null || !this.libopenmpt) {
-			  return;
-		  }
+		  if (processNode === null) return;
+      if (this.libopenmpt === null) return;
 		  this.libopenmpt._openmpt_module_set_repeat_count(
 			  processNode.modulePtr,
 			  this.config.repeatCount || 0,
 		  );
 		  this.currentPlayingNode = processNode;
-		  processNode.connect(this.context);
-		  this.context.connect(this.audioContext.destination);
 	  });
+  }
+
+  play() {
+    if (!this.currentPlayingNode) return;
+    this.unlock();
+    this.currentPlayingNode.paused = false;
+    this.currentPlayingNode.connect(this.context);
+		this.context.connect(this.audioContext.destination);
   }
 
   stop() {
@@ -359,7 +363,7 @@ export class ChiptuneJsPlayer {
       processNode.modulePtr,
     );
     processNode.patternIndex = -1;
-    processNode.paused = false;
+    processNode.paused = true;
     processNode.leftBufferPtr = this.libopenmpt._malloc(4 * maxFramesPerChunk);
     processNode.rightBufferPtr = this.libopenmpt._malloc(4 * maxFramesPerChunk);
     processNode.cleanup = function () {
@@ -464,8 +468,8 @@ export class ChiptuneJsPlayer {
         framesRendered += framesPerChunk;
       }
       if (ended) {
-        this.disconnect();
-        this.cleanup();
+        //this.disconnect();
+        //this.cleanup();
         error
           ? processNode.player.fireEvent("onError", { type: "openmpt" })
           : processNode.player.fireEvent("onEnded");

@@ -55,17 +55,13 @@
 					ref="initRow"
 					:class="{ modRowActive: isRowActive(i) }"
 				>
-					<span :class="{ modColQuarter: i % 4 === 0 }">{{
-						indexText(i)
-					}}</span>
-					<span class="mod-row-inner">{{ getRowText(row) }}</span>
+					<span :class="{ 'mod-row-inner': true, modColQuarter: i % 4 === 0 }">{{ getRowText(row, i) }}</span>
 				</span>
 				<!--MkLoading v-else /-->
 			</div>
 			<div v-else class="mod-pattern" @click="showPattern()">
 				<span ref="initRow" class="modRowActive">
-					<span class="modColQuarter">00</span>
-					<span class="mod-row-inner">|F-12Ev10XEF</span>
+					<span class="mod-row-inner modColQuarter">00|F-12Ev10XEF</span>
 				</span>
 				<br />
 				<p>Click to show mod patterns</p>
@@ -98,17 +94,6 @@
 				<i v-if="muted">🔇</i>
 				<i v-else>🔊</i>
 			</button>
-			<!--FormRange
-				v-model="player.context.gain.value"
-				class="volume"
-				:min="0"
-				:max="1"
-				:step="0.1"
-				:background="false"
-				:tooltips="false"
-				:instant="true"
-				@update:modelValue="updateMute()"
-			></FormRange-->
       <input
           class="volume"
           type="range"
@@ -163,7 +148,10 @@ function startModule(module: string | File) {
 		.load(module)
 		.then((result) => {
 			buffer = result;
-      loaded.value = true;
+      return player.value.loadModule(buffer);
+		})
+		.then(() => {
+			loaded.value = true;
 		})
 		.catch((e: any) => {
 			console.error(e);
@@ -188,13 +176,21 @@ let currentRow = 0,
 function showPattern() {
 	patternShow.value = !patternShow.value;
 	nextTick(() => {
-		if (playing.value) display();
+		if (!player.value.currentPlayingNode?.paused) display();
 		else stop();
 	});
 }
 
-function getRowText(row: ModRow) {
-	let text = "";
+function indexText(i: number) {
+	let rowText = i.toString(16).toUpperCase();
+	if (rowText.length === 1) {
+		rowText = "0" + rowText;
+	}
+	return rowText;
+}
+
+function getRowText(row: ModRow, i: number) {
+	let text = indexText(i);
 	for (let i = 0; i < row.notes.length; i++) {
 		text = text.concat(
 			"|",
@@ -209,47 +205,45 @@ function getRowText(row: ModRow) {
 }
 
 function playPause() {
-	player.value.addHandler("onRowChange", (i) => {
-		if (i?.index !== undefined) currentRow = i.index;
-		currentPattern.value = player.value.getPattern();
-		length.value = player.value.duration();
-		if (!isSeeking) {
-			position.value = player.value.position();
-		}
-		requestAnimationFrame(display);
-	});
-
-	player.value.addHandler("onEnded", () => {
-		stop();
-	});
-
-	if (player.value.currentPlayingNode === null) {
-    if (!buffer) return;
-		loading.value = true;
-		player.value.play(buffer).then(() => {
-			player.value.seek(position.value);
-			player.value.repeat(loop.value);
-			playing.value = true;
-			loading.value = false;
+	if (player.value.handlers.length <= 0) {
+		player.value.addHandler("onRowChange", (i) => {
+			if (i?.index !== undefined) currentRow = i.index;
+			currentPattern.value = player.value.getPattern();
+			length.value = player.value.duration();
+			if (!isSeeking) {
+				position.value = player.value.position();
+			}
+			requestAnimationFrame(display);
 		});
+
+		player.value.addHandler("onEnded", () => {
+			stop();
+		});
+	}
+
+	if (player.value.currentPlayingNode?.paused) {
+		if (!buffer) return;
+		player.value.play();
+		playing.value = true;
 	} else {
 		player.value.togglePause();
-		playing.value = !player.value.currentPlayingNode.paused;
+		playing.value = false;
 	}
 }
 
 async function stop(noDisplayUpdate = false) {
-	player.value.stop();
-	playing.value = false;
+	if (!player.value.currentPlayingNode?.paused) {
+		player.value.togglePause();
+		playing.value = false;
+		player.value.seek(0);
+	}
 	if (!noDisplayUpdate && buffer) {
 		try {
-			await player.value.play(buffer);
 			display(0, true);
 		} catch (e) {
 			console.warn(e);
 		}
 	}
-	player.value.stop();
 	position.value = 0;
 	currentRow = 0;
 	player.value.clearHandlers();
@@ -297,14 +291,6 @@ function isRowActive(i: number) {
 		}
 		return true;
 	}
-}
-
-function indexText(i: number) {
-	let rowText = i.toString(16);
-	if (rowText.length === 1) {
-		rowText = "0" + rowText;
-	}
-	return rowText;
 }
 
 function getRow(pattern: number, rowOffset: number) {
@@ -423,8 +409,18 @@ onDeactivated(() => {
 			> span {
 				opacity: 0.5;
 
-				> .modColQuarter {
-					color: #ffff00;
+				> .mod-row-inner.modColQuarter {
+					background: repeating-linear-gradient(
+						to right,
+						#ffff00 0 2ch,
+						#fff 2ch 6ch,
+						#80e0ff 6ch 8ch,
+						#80ff80 8ch 11ch,
+						#ff80e0 11ch 12ch
+					);
+					background-clip: text;
+					-webkit-background-clip: text;
+					-webkit-text-fill-color: transparent;
 				}
 
 				> .mod-row-inner {
@@ -434,8 +430,9 @@ onDeactivated(() => {
 						#80e0ff 4ch 6ch,
 						#80ff80 6ch 9ch,
 						#ff80e0 9ch 10ch,
-						#ffe080 10ch 12ch
+						#ffff00 10ch 12ch
 					);
+					background-position-x: 2ch;
 					background-clip: text;
 					-webkit-background-clip: text;
 					-webkit-text-fill-color: transparent;
